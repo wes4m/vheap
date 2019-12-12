@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+
+
+<head>
+	<!-- Simple CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+	    html, body {
+   		 margin: 0 !important;
+   		 padding: 0 !important;
+	         background-color: #0b0d0e;
+	    }
+
+	    .container {
+		 position: relative;
+	    }
+
+	    .bottomleft {
+		 position: absolute;
+		 bottom: 19px;
+		 left: 19px;
+		 font-size: 18px;
+	         opacity: 0.6;
+	    }
+
+	    a { text-decoration : none; color : white; }
+	    .fa-twitter { color: #4aa1eb; }
+	    .fa-github { color: white; }
+
+	</style>
+</head>
+
+<body>
+
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<script src="//d3js.org/d3.v4.min.js"></script>
+	<script src="https://unpkg.com/viz.js@1.8.1/viz.js" type="javascript/worker"></script>
+	<script src="https://unpkg.com/d3-graphviz@2.6.1/build/d3-graphviz.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+	<script type="text/javascript" src="static/js/extended.js"></script>
+	<script type="text/javascript" src="static/js/Vheap.js"></script> 
+	<script type="text/javascript" src="static/js/renderer.js"></script>
+
+	<div id="graph"  text-align: center;"></div>
+	<div class="container">
+		<div class="bottomleft">
+			<i class="fa fa-twitter" aria-hidden="true"></i> <a href="https://twitter.com/zawessam">@zawessam</a></br>
+			<i class="fa fa-github" aria-hidden="true"></i>  <a href="https://github.com/wes4m/vheap">Contribute to vHeap</a></br>
+		</div>
+	</div>
+
+
+</body>
+</html>
+<script>
+	// Init vHeap
+	Init();
+</script>
