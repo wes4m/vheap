@@ -1,7 +1,7 @@
 # vHeap
 Extendable Visualization &amp; Exploitation tool for glibc heap.
 
-vHeap is a python/js project aimed at visualizing the glibc heap memory at runtime during your debugging sessions and making your life easier ✨.
+vHeap is a python/js project aimed at visualizing the glibc heap memory at runtime during your debugging sessions to make your life easier ✨.
 
 The heap memory is one of those things that are much easier to work with and learn when visualized. Most security researchers/ctf players end up sketching the heap memory to exploit it.
 
@@ -38,7 +38,7 @@ end
 
 ## Extending
 vHeap can be easily modified to work with other debuggers and any other form of input methods.
-It is also built keeping in mind extending and adding custom functionality [EXTENDING DOCS](https://github.com/wes4m/vheap/blob/master/EXTENDING.md).
+It is also built while keeping in mind extendability and adding custom functionalities; More at[EXTENDING DOCS](https://github.com/wes4m/vheap/blob/master/EXTENDING.md).
 
 
 ## Current status
