@@ -374,12 +374,107 @@ def vhadd_unsortedbin():
 
 
 
+def vhadd_smallbins():
+
+    # Unsortedbin
+    main_heap = pwndbg.heap.current
+    smallbins = main_heap.smallbins(None)
+
+
+    if smallbins is not None:
+        si = 0
+        for size in smallbins:
+            si += 1
+            sbin = smallbins[size]
+            sbinhead = sbin[0][0]  # FDs  / [1][] for BKs
+
+            if(sbinhead != 0 and size != "type"):
+                sbinName = "smallbinshead" + str(si)
+                vheap.vheap_addBinHead(sbinName, str(hex(sbinhead)))
+
+                # loop through fd of chunks in sbin
+                for i in range(len(sbin[0])-1):
+                    chunk = read_chunk(sbin[0][i])
+                    size = int(chunk['size'])
+                    prev_size = int(chunk['prev_size'])
+                    actual_size = size & ~7
+                    prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+                    fd, bk = getfdbk(sbin[0][i]+16)
+
+                    schunk = vheap.vheap_makeChunk(str(i),
+                                                   str(hex(sbin[0][i])),
+                                                   str(hex(prev_size)),
+                                                   str(hex(actual_size)),
+                                                   str(non_main_arena),
+                                                   str(is_mmapped),
+                                                   str(prev_inuse),
+                                                   str(hex(fd)),
+                                                   str(hex(bk)),
+                                                   "0")
+
+                    vheap.vheap_addChunkToBin(sbinName.replace("head", ""), schunk)
+
+
+
+
+def vhadd_largebins():
+
+    # Unsortedbin
+    main_heap = pwndbg.heap.current
+    largebins = main_heap.largebins(None)
+
+
+    if largebins is not None:
+        li = 0
+        for size in largebins:
+            li += 1
+            lbin = largebins[size]
+            lbinhead = lbin[0][0]  # FDs  / [1][] for BKs
+
+            if(lbinhead != 0 and size != "type"):
+                lbinName = "largebinshead" + str(li)
+                vheap.vheap_addBinHead(lbinName, str(hex(lbinhead)))
+
+                # loop through fd of chunks in sbin
+                for i in range(len(lbin[0])-1):
+                    chunk = read_chunk(lbin[0][i])
+                    size = int(chunk['size'])
+                    prev_size = int(chunk['prev_size'])
+                    actual_size = size & ~7
+                    prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+                    fd, bk = getfdbk(lbin[0][i]+16)
+
+                    lchunk = vheap.vheap_makeChunk(str(i),
+                                                   str(hex(lbin[0][i])),
+                                                   str(hex(prev_size)),
+                                                   str(hex(actual_size)),
+                                                   str(non_main_arena),
+                                                   str(is_mmapped),
+                                                   str(prev_inuse),
+                                                   str(hex(fd)),
+                                                   str(hex(bk)),
+                                                   "0")
+
+                    vheap.vheap_addChunkToBin(lbinName.replace("head", ""), lchunk)
+
+
+
+parser = argparse.ArgumentParser()
+parser.description = "Stops vHeap server."
+@pwndbg.commands.ArgparsedCommand(parser)
+def vhstop():
+    """
+    Stops the vheap server
+    """
+    vheap.vheap_stop()
 
 
 parser = argparse.ArgumentParser()
 parser.description = "Shows the current state of the heap on vHeap page."
 parser.add_argument("host", nargs="?", type=str, default=None, help="The host to serve.")
 parser.add_argument("port", nargs="?", type=int, default=None, help="The port.")
+
+
 @pwndbg.commands.ArgparsedCommand(parser)
 def vhserv(host="localhost", port=8080):
     """
@@ -402,6 +497,8 @@ def vhstate():
 
     vhadd_unsortedbin()
 
+    vhadd_smallbins()
+    vhadd_largebins()
 
 
 
