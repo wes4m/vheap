@@ -43,7 +43,6 @@ It is also built while keeping in mind extendability and adding custom functiona
 
 ## Current status
 vHeap currently only supports tcahcebins and fastbins. Next up is
--  Adding smallbins, largebins, unsortedbins.
 -  Selecting different arenas.
 -  Keeping track of malloc'd chunks.
 -  Better overlap detection.
