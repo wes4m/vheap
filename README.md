@@ -42,7 +42,7 @@ It is also built while keeping in mind extendability and adding custom functiona
 
 
 ## Current status
-vHeap currently only supports tcahcebins and fastbins. Next up is
+vHeap to do tasks:
 -  Selecting different arenas.
 -  Better overlap detection.
 -  Making docs.
