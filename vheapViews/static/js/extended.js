@@ -20,6 +20,8 @@ function onCreateEdgeFromChunkToChunkInit(globalChunks, currentChunkIndex) {
 	// ex: check for double frees
 	
 	doubleFreeCheck(globalChunks, currentChunkIndex);
+
+	colorAllocated(globalChunks, currentChunkIndex);
 }
 
 function onCreateEdgeFromChunkToChunkNext(globalChunks, currentChunkIndex, checkChunkIndex) {
@@ -35,8 +37,20 @@ function onCreateEdgeFromChunkToChunkNext(globalChunks, currentChunkIndex, check
 
 
 // Exts.
-const redColor	   = "#d02d2d";
-const darkRedColor = "#7e1e1e";
+const redColor	     = "#d02d2d";
+const darkRedColor   = "#7e1e1e";
+const allocatedColor = "#253df1";
+/* 
+* diferent color for allocated chunks
+*/
+function colorAllocated(globalChunks, i) {
+	var chunk = globalChunks[i];
+	if(chunk.bin == "allocated") {
+		globalChunks[i].extended.backgroundColor = allocatedColor;
+	}
+}
+
+
 /*
 * Check for overlaps/intersections skeletion.. # needs a lot of work 
 */
