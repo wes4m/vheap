@@ -244,25 +244,15 @@ def top_chunk(addr=None):
 
     return malloc_chunk(address)
 
-parser = argparse.ArgumentParser()
-parser.description = "Shows the current state of the heap on vHeap page."
-parser.add_argument("host", nargs="?", type=str, default=None, help="The host to serve.")
-parser.add_argument("port", nargs="?", type=int, default=None, help="The port.")
-@pwndbg.commands.ArgparsedCommand(parser)
-def vhserv(host="localhost", port=8080):
-    """
-    Generates the json of current heap state and sends to vheap server.
-    """
-    vheap.vheap_serve("{}".format(host), "{}".format(port))
 
 
-parser = argparse.ArgumentParser()
-parser.description = "Updates the vHeap view."
-@pwndbg.commands.ArgparsedCommand(parser)
-@pwndbg.commands.OnlyWhenRunning
-@pwndbg.commands.OnlyWithLibcDebugSyms
-@pwndbg.commands.OnlyWhenHeapIsInitialized
-def vhup():
+
+def getfdbk(chunk):
+    c = read_chunk(chunk)
+    return c["prev_size"], c["size"]
+
+
+def vhadd_tcachebins():
 
     # TCAHCEBINS
     main_heap = pwndbg.heap.current
@@ -287,6 +277,7 @@ def vhup():
                     prev_size = int(chunk['prev_size'])
                     actual_size = size & ~7
                     prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+                    fd, bk = getfdbk(tbin[0][i])
 
                     tchunk = vheap.vheap_makeChunk(str(i),
                                                    str(hex(tbin[0][i])),
@@ -295,13 +286,14 @@ def vhup():
                                                    str(non_main_arena),
                                                    str(is_mmapped),
                                                    str(prev_inuse),
-                                                   str(hex(tbin[0][i+1])),
-                                                   "0x0",
+                                                   str(hex(fd)),
+                                                   str(hex(bk)),
                                                    "0")
 
                     vheap.vheap_addChunkToBin(tbinName.replace("head", ""), tchunk)
 
 
+def vhadd_fastbins():
 
     # FASTBINS
     main_heap = pwndbg.heap.current
@@ -324,6 +316,7 @@ def vhup():
                     prev_size = int(chunk['prev_size'])
                     actual_size = size & ~7
                     prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+                    fd, bk = getfdbk(fbin[i]+16)
 
                     fchunk = vheap.vheap_makeChunk(str(i),
                                                    str(hex(fbin[i])),
@@ -332,11 +325,82 @@ def vhup():
                                                    str(non_main_arena),
                                                    str(is_mmapped),
                                                    str(prev_inuse),
-                                                   str(hex(fbin[i+1])),
-                                                   "0x0",
+                                                   str(hex(fd)),
+                                                   str(hex(bk)),
                                                    "0")
 
                     vheap.vheap_addChunkToBin(fbinName.replace("head", ""), fchunk)
+
+
+def vhadd_unsortedbin():
+
+    # Unsortedbin
+    main_heap = pwndbg.heap.current
+    unsortedbin = main_heap.unsortedbin(None)
+
+
+    if unsortedbin is not None:
+        ui = 0
+        for size in unsortedbin:
+            ui += 1
+            ubin = unsortedbin[size]
+            ubinhead = ubin[0][0]  # FDs  / [1][] for BKs
+
+            if(ubinhead != 0 and size != "type"):
+                ubinName = "unsortedbinshead" + str(ui)
+                vheap.vheap_addBinHead(ubinName, str(hex(ubinhead)))
+
+                # loop through fd of chunks in ubin
+                for i in range(len(ubin[0])-1):
+                    chunk = read_chunk(ubin[0][i])
+                    size = int(chunk['size'])
+                    prev_size = int(chunk['prev_size'])
+                    actual_size = size & ~7
+                    prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+                    fd, bk = getfdbk(ubin[0][i]+16)
+
+                    uchunk = vheap.vheap_makeChunk(str(i),
+                                                   str(hex(ubin[0][i])),
+                                                   str(hex(prev_size)),
+                                                   str(hex(actual_size)),
+                                                   str(non_main_arena),
+                                                   str(is_mmapped),
+                                                   str(prev_inuse),
+                                                   str(hex(fd)),
+                                                   str(hex(bk)),
+                                                   "0")
+
+                    vheap.vheap_addChunkToBin(ubinName.replace("head", ""), uchunk)
+
+
+
+
+
+parser = argparse.ArgumentParser()
+parser.description = "Shows the current state of the heap on vHeap page."
+parser.add_argument("host", nargs="?", type=str, default=None, help="The host to serve.")
+parser.add_argument("port", nargs="?", type=int, default=None, help="The port.")
+@pwndbg.commands.ArgparsedCommand(parser)
+def vhserv(host="localhost", port=8080):
+    """
+    Generates the json of current heap state and sends to vheap server.
+    """
+    vheap.vheap_serve("{}".format(host), "{}".format(port))
+
+
+parser = argparse.ArgumentParser()
+parser.description = "Updates the vHeap view."
+@pwndbg.commands.ArgparsedCommand(parser)
+@pwndbg.commands.OnlyWhenRunning
+@pwndbg.commands.OnlyWithLibcDebugSyms
+@pwndbg.commands.OnlyWhenHeapIsInitialized
+def vhstate():
+
+
+    vhadd_tcachebins()
+    vhadd_fastbins()
+
+    vhadd_unsortedbin()
 
 
 
