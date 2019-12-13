@@ -27,7 +27,7 @@ vhserv localhost 1337
 
 To update the heap state.
 ```
-vhup
+vhstate
 ```
 A cool trick instead of updating manually is to define a GDB hook-stop to update with each step.
 ```
