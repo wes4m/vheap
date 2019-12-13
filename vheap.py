@@ -152,7 +152,7 @@ def vheap_makeHeapData():
 '''
  Makes a chunk struct
 '''
-def vheap_makeChunk(index, address, prevSize, chunkSize, a, m, p, fd, bk, allocated):
+def vheap_makeChunk(index, address, prevSize, chunkSize, a, m, p, fd, bk):
     chunk = {
              "index": index,
              "address": address,
@@ -162,8 +162,7 @@ def vheap_makeChunk(index, address, prevSize, chunkSize, a, m, p, fd, bk, alloca
              "m": m,
              "p": p,
              "fd": fd,
-             "bk": bk,
-             "allocated": allocated
+             "bk": bk
              }
 
     return chunk

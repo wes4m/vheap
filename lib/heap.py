@@ -252,13 +252,65 @@ def getfdbk(chunk):
     return c["prev_size"], c["size"]
 
 
+
+def vhadd_allchunks():
+
+    addr = None
+
+    main_heap  = pwndbg.heap.current
+    main_arena = main_heap.main_arena
+    if main_arena is None:
+        return
+
+    page = main_heap.get_heap_boundaries(addr)
+    if addr is None:
+        addr = page.vaddr
+
+    # all chunks on the heap
+    # Check if there is an alignment at the start of the heap
+    size_t = pwndbg.arch.ptrsize
+    first_chunk_size = pwndbg.arch.unpack(pwndbg.memory.read(addr + size_t, size_t))
+    if first_chunk_size == 0:
+        addr += size_t * 2  # Skip the alignment
+
+    i = 0
+    vheap.vheap_addBinHead("allchunkshead", "all")
+
+    while addr < page.vaddr + page.memsz:
+        chunk = read_chunk(addr)
+        size = int(chunk['size'])
+        prev_size = int(chunk['prev_size'])
+        actual_size = size & ~7
+        prev_inuse, is_mmapped, non_main_arena = main_heap.chunk_flags(size)
+        fd, bk = getfdbk(addr)
+
+        achunk = vheap.vheap_makeChunk(str(i),
+                                       str(hex(addr)),
+                                       str(hex(prev_size)),
+                                       str(hex(actual_size)),
+                                       str(non_main_arena),
+                                       str(is_mmapped),
+                                       str(prev_inuse),
+                                       str(hex(fd)),
+                                       str(hex(bk))
+                                       )
+
+        vheap.vheap_addChunkToBin("allchunks", achunk)
+
+        # Clear the bottom 3 bits
+        size &= ~7
+        if size == 0:
+            break
+        addr += size
+        i += 1
+
+
+
 def vhadd_tcachebins():
 
     # TCAHCEBINS
     main_heap = pwndbg.heap.current
     tcachebins = main_heap.tcachebins(None)
-
-    vheap.vheap_clearHeap()
 
     if tcachebins is not None:
         ti = 0
@@ -287,8 +339,8 @@ def vhadd_tcachebins():
                                                    str(is_mmapped),
                                                    str(prev_inuse),
                                                    str(hex(fd)),
-                                                   str(hex(bk)),
-                                                   "0")
+                                                   str(hex(bk))
+                                                   )
 
                     vheap.vheap_addChunkToBin(tbinName.replace("head", ""), tchunk)
 
@@ -326,8 +378,8 @@ def vhadd_fastbins():
                                                    str(is_mmapped),
                                                    str(prev_inuse),
                                                    str(hex(fd)),
-                                                   str(hex(bk)),
-                                                   "0")
+                                                   str(hex(bk))
+                                                   )
 
                     vheap.vheap_addChunkToBin(fbinName.replace("head", ""), fchunk)
 
@@ -367,8 +419,8 @@ def vhadd_unsortedbin():
                                                    str(is_mmapped),
                                                    str(prev_inuse),
                                                    str(hex(fd)),
-                                                   str(hex(bk)),
-                                                   "0")
+                                                   str(hex(bk))
+                                                   )
 
                     vheap.vheap_addChunkToBin(ubinName.replace("head", ""), uchunk)
 
@@ -409,8 +461,8 @@ def vhadd_smallbins():
                                                    str(is_mmapped),
                                                    str(prev_inuse),
                                                    str(hex(fd)),
-                                                   str(hex(bk)),
-                                                   "0")
+                                                   str(hex(bk))
+                                                   )
 
                     vheap.vheap_addChunkToBin(sbinName.replace("head", ""), schunk)
 
@@ -452,8 +504,8 @@ def vhadd_largebins():
                                                    str(is_mmapped),
                                                    str(prev_inuse),
                                                    str(hex(fd)),
-                                                   str(hex(bk)),
-                                                   "0")
+                                                   str(hex(bk))
+                                                   )
 
                     vheap.vheap_addChunkToBin(lbinName.replace("head", ""), lchunk)
 
@@ -492,6 +544,8 @@ parser.description = "Updates the vHeap view."
 def vhstate():
 
 
+    vheap.vheap_clearHeap()
+
     vhadd_tcachebins()
     vhadd_fastbins()
 
@@ -500,6 +554,7 @@ def vhstate():
     vhadd_smallbins()
     vhadd_largebins()
 
+    vhadd_allchunks()
 
 
 parser = argparse.ArgumentParser()

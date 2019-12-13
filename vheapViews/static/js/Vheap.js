@@ -7,7 +7,7 @@
 hchunks   = null; // All current heap chunks
 binsheads = null; // All current heap bins heads
 
-function ChunkStruct(bin, index, address, prevSize, chunkSize, a, m, p, fd, bk, allocated) {
+function ChunkStruct(bin, index, address, prevSize, chunkSize, a, m, p, fd, bk) {
 	this.bin = bin;
 	this.index = index;
 	this.address = address;
@@ -19,7 +19,6 @@ function ChunkStruct(bin, index, address, prevSize, chunkSize, a, m, p, fd, bk, 
 	this.fd = fd;
 	this.bk = bk;
 
-	this.allocated = allocated;
 	this.extended = {"rows": [], "backgroundColor": ""};
 }
 
@@ -55,13 +54,54 @@ function InitHeap(jsonChunks) {
 			         jchunk.m,
 				 jchunk.p,
 				 jchunk.fd,
-				 jchunk.bk,
-				 jchunk.allocated
+				 jchunk.bk
 			 );
 
 			 hchunks.push(chunk);
 		 }
 	 }
+	
+
+	// figure out allocated chunks
+	allocated = 0;
+	for(c = 0; c < hchunks.length; c++) {
+		currentChunk = hchunks[c];
+
+		if(currentChunk.bin == "allchunks") {
+			// set chunks in allchunks array to allocated
+			hchunks[c].bin = "allocated";
+			allocated += 1;
+
+			// check if chunk in one of freelists
+			for(ca = 0; ca < hchunks.length; ca++) {
+				checkChunk = hchunks[ca];
+			
+				if(checkChunk.bin != "allchunks" && c != ca) {
+
+					// chunk found in freelist. remove it from all chunks and keep it in list
+					if(    ((hInt(currentChunk.address) == hInt(checkChunk.address)) || 	    // If found
+						(hInt(currentChunk.address) == (hInt(checkChunk.address)-16) ))     // Additional check for tcahce bins frees 
+														    // (the all chunks are addressed from begining while tcache after (prevSize+size+flags) )
+						
+					) {
+						// remove from all chunks. keep in bin
+						hchunks[c].bin = "toRemove";
+						allocated -= 1;
+					}
+				}
+			}
+		}
+	
+	}
+
+	// remove free chunks from allocated chunks
+	for(r = hchunks.length - 1; r >= 0; r--) { if(hchunks[r].bin == "toRemove") { hchunks.splice(r, 1);  }  }
+	
+	// set allocated count
+	binsheads["allocated"] = `${allocated}`;
+	delete binsheads["allchunkshead"];
+
+
 }
 
 
@@ -201,13 +241,27 @@ function makeChunksEdgesDot() {
 		}
 	}
 
-	// Chunks to chunks	
+	// Chunks to chunks
+	
+	lastAllocated = {};
+
 	for(i = 0; i < hchunks.length; i++) {
 		
 		var currentChunk = hchunks[i];
-		
+	
 		// Handle chunks to chunks extensions init
 		onCreateEdgeFromChunkToChunkInit(hchunks, i);
+
+
+		// Invisivle edge between allocated chunk (ranking by size. to make graph more organized)
+		if(currentChunk.bin == "allocated" && !(currentChunk.chunkSize in lastAllocated)) { console.log(currentChunk.chunkSize); lastAllocated[currentChunk.chunkSize] = currentChunk; }
+		if(currentChunk.bin == "allocated" && currentChunk.chunkSize in  lastAllocated) {
+			from = lastAllocated[currentChunk.chunkSize];
+			edges += `${from.bin}_${from.index}:fdPtr -> ${currentChunk.bin}_${currentChunk.index}:fdPtr [style=invis]` + "\n";
+			
+			lastAllocated[currentChunk.chunkSize] = currentChunk;
+		}
+
 
 		// Check against other chunks	
 		for(j = 0; j < hchunks.length; j++) {	
@@ -233,7 +287,8 @@ function makeChunksEdgesDot() {
 				edges += `${currentChunk.bin}_${currentChunk.index}:bkPtr -> ${checkChunk.bin}_${checkChunk.index}:${pointAt}` + "\n";
 			}
 				
-			
+	
+
 		}
 	
 	}	
