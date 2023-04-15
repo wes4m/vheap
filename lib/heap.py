@@ -14,7 +14,7 @@ import six
 import pwndbg.color.context as C
 import pwndbg.color.memory as M
 import pwndbg.commands
-import pwndbg.typeinfo
+import pwndbg.gdblib.typeinfo
 from pwndbg.color import generateColorFunction
 from pwndbg.color import message
 
