@@ -11,8 +11,8 @@ fi
 
 
 ### Setup
-cp -r ../vheap $1pwndbg/
-cp lib/heap.py $1pwndbg/commands/heap.py
+cp -r ../vheap $1/pwndbg/
+cp lib/heap.py $1/pwndbg/commands/heap.py
 
 python3 -m pip install -r requirements.txt
 
