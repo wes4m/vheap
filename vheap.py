@@ -104,6 +104,9 @@ def vhserv(host="localhost", port=8080, no_auto_update=False):
     Generates the json of current heap state and sends to vheap server.
     """
     vheap.serve(host, port, not no_auto_update)
+    # Update the heap state right away
+    if isinstance(pwndbg.heap.current, GlibcMemoryAllocator):
+        vhstate()
 
 
 parser = argparse.ArgumentParser()
