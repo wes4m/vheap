@@ -11,9 +11,8 @@ fi
 
 
 ### Setup
-cp -r ../vheap $1pwndbg/
-cp lib/heap.py $1pwndbg/commands/heap.py
-
-python3 -m pip install -r requirements.txt
+# install dependencies in pwndbg venv
+"$1/.venv/bin/python3" -m pip install -r requirements.txt
+echo "source $PWD/vheap.py" >> ~/.gdbinit
 
 echo "vHeap Installed."
