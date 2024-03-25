@@ -29,12 +29,7 @@ To update the heap state.
 ```
 vhstate
 ```
-A cool trick instead of updating manually is to define a GDB hook-stop to update with each step.
-```
-define hook-stop
-`vhstate
-end
-```
+The heap state is updated automatically on each stop. You can disable auto updating using the `vhserv --no-auto-update` argument during vheap start.
 
 ## Extending
 vHeap can be easily modified to work with other debuggers and any other form of input methods.

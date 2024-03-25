@@ -95,14 +95,15 @@ parser = argparse.ArgumentParser()
 parser.description = "Shows the current state of the heap on vHeap page."
 parser.add_argument("host", nargs="?", type=str, default="localhost", help="The host to serve.")
 parser.add_argument("port", nargs="?", type=int, default=8080, help="The port.")
+parser.add_argument("--no-auto-update", action="store_true", help="Don't auto update the heap state on every stop.")
 
 
 @pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.HEAP)
-def vhserv(host="localhost", port=8080):
+def vhserv(host="localhost", port=8080, no_auto_update=False):
     """
     Generates the json of current heap state and sends to vheap server.
     """
-    vheap.serve(host, port)
+    vheap.serve(host, port, not no_auto_update)
 
 
 parser = argparse.ArgumentParser()
@@ -119,7 +120,8 @@ def vhstate():
     vheap.clearHeap()
 
     allocator = pwndbg.heap.current
-    assert isinstance(allocator, GlibcMemoryAllocator)
+    if not isinstance(allocator, GlibcMemoryAllocator):
+        return
     safe_lnk = pwndbg.glibc.check_safe_linking()
 
     vhadd_bins(allocator.tcachebins(None), "tcachebins", safe_lnk, -16)
@@ -129,6 +131,7 @@ def vhstate():
     vhadd_bins(allocator.largebins(None), "largebins", False)
 
     vhadd_allchunks()
+
 
 # end pwndbg commands #
 
@@ -149,6 +152,7 @@ class VisualHeap:
     # Defaults
     port = 8080
     host = "localhost"
+    auto_update = False
 
     def __init__(self):
         self.clearHeap()
@@ -206,17 +210,21 @@ class VisualHeap:
         self.loop.run_until_complete(site.start())
         self.loop.run_forever()
 
-    def serve(self, host: str = "localhost", port: int = 8080) -> None:
+    def serve(self, host: str = "localhost", port: int = 8080, auto_update: bool = True) -> None:
         """
         Starts serving vHeap thread
         """
         if not self.serving:
             self.host = host
             self.port = port
+            self.auto_update = auto_update
             self.apprunner = self.aiohttp_server()
 
             t = threading.Thread(target=self.serve_thread)
             t.start()
+
+            if auto_update:
+                gdb.events.stop.connect(gdb_stop_handler)
 
     def stop_threadsafe(self):
         self.loop.stop()
@@ -232,6 +240,8 @@ class VisualHeap:
             print("Stopping vHeap server")
             asyncio.run_coroutine_threadsafe(self.apprunner.cleanup(), self.loop)
             self.loop.call_soon_threadsafe(self.stop_threadsafe)
+            if self.auto_update:
+                gdb.events.stop.disconnect(gdb_stop_handler)
 
     def clearHeap(self):
         """
@@ -290,6 +300,10 @@ class VisualHeap:
 
 
 vheap = VisualHeap()
+
+
+def gdb_stop_handler(_event):
+    vhstate()
 
 
 def gdb_exit_handler(_event):
