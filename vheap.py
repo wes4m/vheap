@@ -1,4 +1,5 @@
 import argparse
+from typing import Dict, List, Optional
 from collections import defaultdict
 from pathlib import Path
 from aiohttp import web
@@ -141,16 +142,16 @@ def vhstate():
 
 class VisualHeap:
     # Thread loop
-    loop: asyncio.AbstractEventLoop | None = None
+    loop: Optional[asyncio.AbstractEventLoop] = None
     # Socket io
-    sio: socketio.AsyncServer | None = None
-    site: web.TCPSite | None = None
+    sio: Optional[socketio.AsyncServer] = None
+    site: Optional[web.TCPSite] = None
     # To hold status of server
     serving = False
     # To hold bins head addresses
-    binsheads: dict[str, str] = {}
+    binsheads: Dict[str, str] = {}
     # To hold bins chunks
-    binschunks: dict[str, list[dict[str, str]]] = defaultdict(list)
+    binschunks: Dict[str, List[Dict[str, str]]] = defaultdict(list)
     viewPath = Path(__file__).parent / "vheapViews"
     # Defaults
     port = 8080
@@ -259,7 +260,7 @@ class VisualHeap:
         """
         self.binsheads[head] = address
 
-    def addChunkToBin(self, bin: str, chunk: dict[str, str]):
+    def addChunkToBin(self, bin: str, chunk: Dict[str, str]):
         """
         Adds a chunks to a specific bin
         """
@@ -276,14 +277,14 @@ class VisualHeap:
         self,
         index: int,
         address: int,
-        prevSize: int | None,
-        chunkSize: int | None,
+        prevSize: Optional[int],
+        chunkSize: Optional[int],
         a: bool,
         m: bool,
         p: bool,
-        fd: int | None,
-        bk: int | None,
-    ) -> dict[str, str]:
+        fd: Optional[int],
+        bk: Optional[int],
+    ) -> Dict[str, str]:
         """
         Makes a chunk struct
         """
