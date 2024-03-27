@@ -10,7 +10,7 @@ The heap memory is one of those things that are much easier to work with and lea
 ![vHeapPng](imgs/vHeapStaticDemo.png)
 
 ## Support & installation
-This vHeap version is built to work with [pwndbg](https://github.com/pwndbg/pwndbg) on GDB.
+This vHeap version is built to work with [pwndbg](https://github.com/pwndbg/pwndbg) on GDB (requires GDB v11 and higher).
 
 Clone and install [pwndbg](https://github.com/pwndbg/pwndbg) then
 ```
@@ -33,7 +33,7 @@ The heap state is updated automatically on each stop. You can disable auto updat
 
 ## Extending
 vHeap can be easily modified to work with other debuggers and any other form of input methods.
-It is also built while keeping in mind extendability and adding custom functionalities; More at[EXTENDING DOCS](https://github.com/wes4m/vheap/blob/master/EXTENDING.md).
+It is also built while keeping in mind extendability and adding custom functionalities; More at [EXTENDING DOCS](https://github.com/wes4m/vheap/blob/master/EXTENDING.md).
 
 
 ## Current status
