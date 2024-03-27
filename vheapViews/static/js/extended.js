@@ -51,6 +51,20 @@ function colorAllocated(globalChunks, i) {
 }
 
 
+function getChunkBaseAddress(chunk) {
+	if (chunk.bin.includes("tcache")) {
+		return hInt(chunk.address) - 0x10;
+	}
+	return hInt(chunk.address);
+}
+
+function getChunkBaseFD(chunk) {
+	if (chunk.bin.includes("tcache")) {
+		return hInt(chunk.fd) - 0x10;
+	}
+	return hInt(chunk.fd);
+}
+
 /*
 * Check for overlaps/intersections skeletion.. # needs a lot of work 
 */
@@ -59,7 +73,7 @@ function overlaps(globalChunks, i, j) {
 	// Also need to check for currentChunk.chunkSize because it can go forwared to reach some chunk
 	var currentChunk = globalChunks[i];
 	var checkChunk   = globalChunks[j];
-	if(hInt(currentChunk.fd) > hInt(checkChunk.address) && hInt(currentChunk.fd) < (hInt(checkChunk.address) + hInt(checkChunk.chunkSize))) {
+	if(getChunkBaseFD(currentChunk) > getChunkBaseAddress(checkChunk) && getChunkBaseFD(currentChunk) < (getChunkBaseAddress(checkChunk) + hInt(checkChunk.chunkSize))) {
 		globalChunks[i].extended.rows.push({ "text": `Possible overlap, fd points inside chunk ${checkChunk.bin}[${checkChunk.index}]`, "color": redColor});
 		globalChunks[i].extended.backgroundColor = darkRedColor;
 	}
