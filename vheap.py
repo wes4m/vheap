@@ -13,9 +13,9 @@ import os
 import gdb
 import pwndbg.commands
 import pwndbg.glibc
-import pwndbg.heap
+import pwndbg.gdblib.heap
 from pwndbg.commands import CommandCategory
-from pwndbg.heap.ptmalloc import (
+from pwndbg.gdblib.heap.ptmalloc import (
     Bins,
     Chunk,
     GlibcMemoryAllocator,
@@ -23,7 +23,7 @@ from pwndbg.heap.ptmalloc import (
 
 
 def vhadd_allchunks() -> None:
-    allocator = pwndbg.heap.current
+    allocator = pwndbg.gdblib.heap.current
     assert isinstance(allocator, GlibcMemoryAllocator)
     main_arena = allocator.main_arena
     if main_arena is None:
@@ -49,7 +49,7 @@ def vhadd_allchunks() -> None:
 
 
 def vhadd_bins(bins: Bins, bin_name: str, safe_linking: bool, addr_offset: int = 0) -> None:
-    allocator = pwndbg.heap.current
+    allocator = pwndbg.gdblib.heap.current
     assert isinstance(allocator, GlibcMemoryAllocator)
 
     if bins is not None:
@@ -106,7 +106,7 @@ def vhserv(host="localhost", port=8080, no_auto_update=False):
     """
     vheap.serve(host, port, not no_auto_update)
     # Update the heap state right away
-    if isinstance(pwndbg.heap.current, GlibcMemoryAllocator):
+    if isinstance(pwndbg.gdblib.heap.current, GlibcMemoryAllocator):
         vhstate()
 
 
@@ -123,7 +123,7 @@ def vhstate():
 
     vheap.clearHeap()
 
-    allocator = pwndbg.heap.current
+    allocator = pwndbg.gdblib.heap.current
     if not isinstance(allocator, GlibcMemoryAllocator):
         return
     safe_lnk = pwndbg.glibc.check_safe_linking()
@@ -240,7 +240,7 @@ class VisualHeap:
         """
         Stops serving vHeap thread
         """
-        if self.serving:
+        if self.serving and self.loop is not None:
             print("Stopping vHeap server")
             asyncio.run_coroutine_threadsafe(self.apprunner.cleanup(), self.loop)
             self.loop.call_soon_threadsafe(self.stop_threadsafe)
