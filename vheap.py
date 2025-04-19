@@ -13,9 +13,9 @@ import os
 import gdb
 import pwndbg.commands
 import pwndbg.glibc
-import pwndbg.gdblib.heap
+import pwndbg.aglib.heap
 from pwndbg.commands import CommandCategory
-from pwndbg.gdblib.heap.ptmalloc import (
+from pwndbg.aglib.heap.ptmalloc import (
     Bins,
     Chunk,
     GlibcMemoryAllocator,
@@ -23,7 +23,7 @@ from pwndbg.gdblib.heap.ptmalloc import (
 
 
 def vhadd_allchunks() -> None:
-    allocator = pwndbg.gdblib.heap.current
+    allocator = pwndbg.aglib.heap.current
     assert isinstance(allocator, GlibcMemoryAllocator)
     main_arena = allocator.main_arena
     if main_arena is None:
@@ -49,7 +49,7 @@ def vhadd_allchunks() -> None:
 
 
 def vhadd_bins(bins: Bins, bin_name: str, safe_linking: bool, addr_offset: int = 0) -> None:
-    allocator = pwndbg.gdblib.heap.current
+    allocator = pwndbg.aglib.heap.current
     assert isinstance(allocator, GlibcMemoryAllocator)
 
     if bins is not None:
@@ -84,7 +84,7 @@ parser = argparse.ArgumentParser()
 parser.description = "Stops vHeap server."
 
 
-@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.HEAP)
+@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.PTMALLOC2)
 def vhstop():
     """
     Stops the vheap server
@@ -99,14 +99,14 @@ parser.add_argument("port", nargs="?", type=int, default=8080, help="The port.")
 parser.add_argument("--no-auto-update", action="store_true", help="Don't auto update the heap state on every stop.")
 
 
-@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.HEAP)
+@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.PTMALLOC2)
 def vhserv(host="localhost", port=8080, no_auto_update=False):
     """
     Generates the json of current heap state and sends to vheap server.
     """
     vheap.serve(host, port, not no_auto_update)
     # Update the heap state right away
-    if isinstance(pwndbg.gdblib.heap.current, GlibcMemoryAllocator):
+    if isinstance(pwndbg.aglib.heap.current, GlibcMemoryAllocator):
         vhstate()
 
 
@@ -114,7 +114,7 @@ parser = argparse.ArgumentParser()
 parser.description = "Updates the vHeap view."
 
 
-@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.HEAP)
+@pwndbg.commands.ArgparsedCommand(parser, category=CommandCategory.PTMALLOC2)
 @pwndbg.commands.OnlyWhenRunning
 @pwndbg.commands.OnlyWithResolvedHeapSyms
 @pwndbg.commands.OnlyWhenHeapIsInitialized
@@ -123,7 +123,7 @@ def vhstate():
 
     vheap.clearHeap()
 
-    allocator = pwndbg.gdblib.heap.current
+    allocator = pwndbg.aglib.heap.current
     if not isinstance(allocator, GlibcMemoryAllocator):
         return
     safe_lnk = pwndbg.glibc.check_safe_linking()
